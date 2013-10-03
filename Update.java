@@ -1,13 +1,14 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * This class is a barebones example of how to use the BukkitDev ServerMods API to check for file updates.
@@ -16,18 +17,19 @@ import org.json.simple.JSONValue;
  */
 public class Update {
 
+    public class FileInfo {
+        public String name;
+        public String downloadUrl;
+        public String releaseType;
+        public String fileName;
+        public String gameVersion;
+    }
+
     // The project's unique ID
     private final int projectID;
 
     // An optional API key to use, will be null if not submitted
     private final String apiKey;
-
-    // Keys for extracting file information from JSON response
-    private static final String API_NAME_VALUE = "name";
-    private static final String API_LINK_VALUE = "downloadUrl";
-    private static final String API_RELEASE_TYPE_VALUE = "releaseType";
-    private static final String API_FILE_NAME_VALUE = "fileName";
-    private static final String API_GAME_VERSION_VALUE = "gameVersion";
 
     // Static information for querying the API
     private static final String API_QUERY = "/servermods/files?projectIds=";
@@ -89,26 +91,27 @@ public class Update {
             String response = reader.readLine();
 
             // Parse the array of files from the query's response
-            JSONArray array = (JSONArray) JSONValue.parse(response);
+            Type type = new TypeToken<List<FileInfo>>() {}.getType();
+            List<FileInfo> array = new Gson().fromJson(response, type);
 
             if (array.size() > 0) {
                 // Get the newest file's details
-                JSONObject latest = (JSONObject) array.get(array.size() - 1);
+                FileInfo latest = array.get(array.size() - 1);
 
                 // Get the version's title
-                String versionName = (String) latest.get(API_NAME_VALUE);
+                String versionName = latest.name;
 
                 // Get the version's link
-                String versionLink = (String) latest.get(API_LINK_VALUE);
+                String versionLink = latest.downloadUrl;
 
                 // Get the version's release type
-                String versionType = (String) latest.get(API_RELEASE_TYPE_VALUE);
+                String versionType = latest.releaseType;
 
                 // Get the version's file name
-                String versionFileName = (String) latest.get(API_FILE_NAME_VALUE);
+                String versionFileName = latest.fileName;
 
                 // Get the version's game version
-                String versionGameVersion = (String) latest.get(API_GAME_VERSION_VALUE);
+                String versionGameVersion = latest.gameVersion;
 
                 System.out.println(
                         "The latest version of " + versionFileName +
